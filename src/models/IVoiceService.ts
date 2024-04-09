@@ -2,6 +2,7 @@
 
 import { Readable } from "stream";
 import { VoiceLanguage } from "./VoiceLanguages";
+import { VoiceSpeaker } from "./VoiceSpeaker";
 
 interface IVoiceService {
     // tts 文字转语音
@@ -10,7 +11,7 @@ interface IVoiceService {
         params: {
             language: VoiceLanguage,
             format: "mp3" | "pcm",
-            voice?: string
+            voice?: VoiceSpeaker
         }
     ): Promise<Buffer | null>;
 

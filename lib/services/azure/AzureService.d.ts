@@ -3,7 +3,7 @@
 import { Readable } from 'stream';
 import IVoiceService from '../../models/IVoiceService';
 import { VoiceLanguage } from "../../models/VoiceLanguages";
-import { AzureSpeechVoice } from ".";
+import { AzureSpeechVoice } from "../../models/VoiceSpeaker";
 declare class AzureService implements IVoiceService {
     private speechConfig;
     private apiVersion;

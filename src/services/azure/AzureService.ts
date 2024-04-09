@@ -11,7 +11,8 @@ import Configuration from '../../config/Configuration';
 import { AzureConfig } from '../../models/AzureConfig';
 import { VoiceLanguage } from "../../models/VoiceLanguages";
 import { error } from "console";
-import { AzureSpeechLangData, AzureSpeechVoice, azureSpeechLangs } from ".";
+import { AzureSpeechLangData, azureSpeechLangs } from ".";
+import { AzureSpeechVoice } from "../../models/VoiceSpeaker";
 
 const debug = Debug('voice-services:azure');
 
