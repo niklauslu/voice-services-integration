@@ -14,7 +14,7 @@ import { error } from "console";
 import { AzureSpeechLangData, azureSpeechLangs } from ".";
 import { AzureSpeechVoice } from "../../models/VoiceSpeaker";
 import { AudioStream } from "../../models/AudioStream";
-import { VoiceTranslateRes, VoiceTranslateResult } from "../../models/VoiceTranslateResult";
+import { VoiceTranslateResult } from "../../models/VoiceTranslateResult";
 import { buffer, text } from "stream/consumers";
 
 const debug = Debug('voice-services:azure');
@@ -167,7 +167,7 @@ class AzureService implements IVoiceService {
             ttsVoice?: AzureSpeechVoice
         },
         callback?: (result: VoiceTranslateResult) => void
-    ): Promise<VoiceTranslateRes | null> {
+    ): Promise<VoiceTranslateResult[] | null> {
 
         const language = this.getLanguageConfig(params.from)
         if (language === undefined) {
@@ -208,7 +208,8 @@ class AzureService implements IVoiceService {
                     const data: VoiceTranslateResult = {
                         language: l.lang,
                         type: "text",
-                        data: e.result.translations.get(l.transaltion),
+                        text: e.result.text,
+                        result: e.result.translations.get(l.transaltion),
                     }
                     if (callback) callback(data)
 
@@ -224,14 +225,15 @@ class AzureService implements IVoiceService {
                         datas.push({
                             language: l.lang,
                             type: "text",
-                            data: e.result.translations.get(l.transaltion),
+                            text: e.result.text,
+                            result: e.result.translations.get(l.transaltion),
                         })
                     })
 
                     if (params.tts) {
                         datas.forEach(async (d) => {
                            
-                            const audio = await this.textToSpeech(d.data as string, {
+                            const audio = await this.textToSpeech(d.result as string, {
                                 language: d.language,
                                 format: params.ttsFormat,
                                 voice: params.ttsVoice
@@ -240,7 +242,8 @@ class AzureService implements IVoiceService {
                             if (buffer !== null) {
                                 const result: VoiceTranslateResult = {
                                     type: "audio",
-                                    data: audio as Buffer,
+                                    text: d.text,
+                                    result: audio as Buffer,
                                     language: d.language
                                 }
                                 
@@ -252,10 +255,7 @@ class AzureService implements IVoiceService {
                         })
                     }
 
-                    resolve({
-                        text: e.result.text,
-                        results: datas
-                    })
+                    resolve(datas)
 
 
                 } else if (e.result.reason == sdk.ResultReason.NoMatch) {

@@ -2,7 +2,7 @@
 import { VoiceLanguage } from "./VoiceLanguages";
 import { VoiceSpeaker } from "./VoiceSpeaker";
 import { AudioStream } from "./AudioStream";
-import { VoiceTranslateRes, VoiceTranslateResult } from "./VoiceTranslateResult";
+import { VoiceTranslateResult } from "./VoiceTranslateResult";
 interface IVoiceService {
     textToSpeech(text: string, params: {
         language: VoiceLanguage;
@@ -17,7 +17,7 @@ interface IVoiceService {
         to: VoiceLanguage[];
         tts?: boolean;
         ttsVoice?: VoiceSpeaker;
-    }, callback?: (results: VoiceTranslateResult) => void): Promise<VoiceTranslateRes | null>;
+    }, callback?: (results: VoiceTranslateResult) => void): Promise<VoiceTranslateResult[] | null>;
     handleError(error: Error): void;
     logDebug(...params: any[]): void;
 }

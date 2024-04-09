@@ -4,7 +4,7 @@ import { Readable } from "stream";
 import { VoiceLanguage } from "./VoiceLanguages";
 import { VoiceSpeaker } from "./VoiceSpeaker";
 import { AudioStream } from "./AudioStream";
-import { VoiceTranslateRes, VoiceTranslateResult } from "./VoiceTranslateResult";
+import { VoiceTranslateResult } from "./VoiceTranslateResult";
 
 interface IVoiceService {
     // tts 文字转语音
@@ -36,7 +36,7 @@ interface IVoiceService {
             ttsVoice?: VoiceSpeaker
         },
         callback?: (results: VoiceTranslateResult) => void
-    ): Promise<VoiceTranslateRes | null>;
+    ): Promise<VoiceTranslateResult[] | null>;
 
     handleError(error: Error): void;
     logDebug(...params: any[]): void;
