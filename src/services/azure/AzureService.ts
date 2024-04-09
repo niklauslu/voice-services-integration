@@ -14,6 +14,8 @@ import { error } from "console";
 import { AzureSpeechLangData, azureSpeechLangs } from ".";
 import { AzureSpeechVoice } from "../../models/VoiceSpeaker";
 import { AudioStream } from "../../models/AudioStream";
+import { VoiceTranslateRes, VoiceTranslateResult } from "../../models/VoiceTranslateResult";
+import { buffer, text } from "stream/consumers";
 
 const debug = Debug('voice-services:azure');
 
@@ -22,6 +24,7 @@ const debug = Debug('voice-services:azure');
 class AzureService implements IVoiceService {
 
     private speechConfig: sdk.SpeechConfig;
+    private translationConfig: sdk.SpeechTranslationConfig;
     private apiVersion: string = '2023-12-01-preview'
 
     constructor() {
@@ -32,6 +35,7 @@ class AzureService implements IVoiceService {
         }
 
         this.speechConfig = sdk.SpeechConfig.fromSubscription(config.key, config.region);
+        this.translationConfig = sdk.SpeechTranslationConfig.fromSubscription(config.key, config.region);
     }
 
     handleError(error: Error): void {
@@ -47,7 +51,7 @@ class AzureService implements IVoiceService {
     // 语音合成
     async textToSpeech(text: string, params: {
         language: VoiceLanguage,
-        format: "mp3" | "pcm",
+        format?: "mp3" | "pcm",
         voice?: AzureSpeechVoice
     }): Promise<Buffer | null> {
         const language = this.getLanguageConfig(params.language)
@@ -153,14 +157,136 @@ class AzureService implements IVoiceService {
         });
     }
 
-    async speechTranslateToSpeech(
+    async speechTranslate(
         audioStream: AudioStream,
         params: {
             from: VoiceLanguage,
-            to: VoiceLanguage | VoiceLanguage[]
-        }): Promise<Buffer | null> {
+            to: VoiceLanguage[],
+            tts?: boolean,
+            ttsFormat?: "mp3" | "pcm",
+            ttsVoice?: AzureSpeechVoice
+        },
+        callback?: (result: VoiceTranslateResult) => void
+    ): Promise<VoiceTranslateRes | null> {
 
+        const language = this.getLanguageConfig(params.from)
+        if (language === undefined) {
+            this.handleError(new Error("Language not supported"))
             return null
+        }
+
+        let toLanguages: AzureSpeechLangData[] = []
+        this.translationConfig.speechRecognitionLanguage = language.recoginize
+        params.to.forEach((l) => {
+            const toLanguage = this.getLanguageConfig(l)
+            if (toLanguage !== undefined) {
+                this.translationConfig.addTargetLanguage(toLanguage.transaltion)
+                toLanguages.push(toLanguage)
+            }
+        })
+
+        if (toLanguages.length === 0) {
+            this.handleError(new Error("No valid target languages found"))
+            return null
+        }
+
+        let pushStream = sdk.AudioInputStream.createPushStream();
+
+        audioStream.on('data', function (arrayBuffer: ArrayBuffer) {
+            pushStream.write(arrayBuffer.slice(0));
+        }).on('end', function () {
+            pushStream.close();
+        });
+        const audioConfig = sdk.AudioConfig.fromStreamInput(pushStream)
+        const translationRecognizer = new sdk.TranslationRecognizer(this.translationConfig, audioConfig);
+
+        return new Promise((resolve, reject) => {
+
+            translationRecognizer.recognizing = (s, e) => {
+                this.logDebug(`speechTranslate TRANSLATING: Text=${e.result.text}`);
+                toLanguages.forEach(l => {
+                    const data: VoiceTranslateResult = {
+                        language: l.lang,
+                        type: "text",
+                        data: e.result.translations.get(l.transaltion),
+                    }
+                    if (callback) callback(data)
+
+                })
+
+            }
+
+            translationRecognizer.recognized = (s, e) => {
+                // console.log(`RECOGNIZED: Text=${e.result.text}, ${e.result.reason}`);
+                if (e.result.reason == sdk.ResultReason.TranslatedSpeech) {
+                    let datas: VoiceTranslateResult[] = []
+                    toLanguages.forEach(l => {
+                        datas.push({
+                            language: l.lang,
+                            type: "text",
+                            data: e.result.translations.get(l.transaltion),
+                        })
+                    })
+
+                    if (params.tts) {
+                        datas.forEach(async (d) => {
+                           
+                            const audio = await this.textToSpeech(d.data as string, {
+                                language: d.language,
+                                format: params.ttsFormat,
+                                voice: params.ttsVoice
+                            })
+    
+                            if (buffer !== null) {
+                                const result: VoiceTranslateResult = {
+                                    type: "audio",
+                                    data: audio as Buffer,
+                                    language: d.language
+                                }
+                                
+                                if (callback) {
+                                    callback(result)
+                                }
+                            }
+    
+                        })
+                    }
+
+                    resolve({
+                        text: e.result.text,
+                        results: datas
+                    })
+
+
+                } else if (e.result.reason == sdk.ResultReason.NoMatch) {
+                    this.handleError(new Error("speechTranslate NOMATCH: Speech could not be translated. no match"));
+                    resolve(null)
+                } else {
+                    this.handleError(new Error("speechTranslate NOMATCH: Speech could not be translated. " + e.result.reason));
+                    resolve(null)
+                }
+
+                translationRecognizer.stopContinuousRecognitionAsync()
+            };
+
+            translationRecognizer.canceled = (s, e) => {
+
+                if (e.reason == sdk.CancellationReason.Error) {
+                    this.handleError(new Error(`speechTranslate CANCELED: ErrorCode=${e.errorCode}`));
+                    this.handleError(new Error(`speechTranslate CANCELED: ErrorDetails=${e.errorDetails}`));
+                    translationRecognizer.stopContinuousRecognitionAsync()
+                }
+
+            };
+            translationRecognizer.sessionStopped = (s, e) => {
+                this.logDebug("speechTranslate   Session stopped event.");
+                translationRecognizer.stopContinuousRecognitionAsync()
+
+            };
+
+            translationRecognizer.startContinuousRecognitionAsync();
+
+        });
     }
 
     private getLanguageConfig(language: VoiceLanguage): AzureSpeechLangData | undefined {

@@ -4,6 +4,7 @@ import { Readable } from "stream";
 import { VoiceLanguage } from "./VoiceLanguages";
 import { VoiceSpeaker } from "./VoiceSpeaker";
 import { AudioStream } from "./AudioStream";
+import { VoiceTranslateRes, VoiceTranslateResult } from "./VoiceTranslateResult";
 
 interface IVoiceService {
     // tts 文字转语音
@@ -11,7 +12,7 @@ interface IVoiceService {
         text: string,
         params: {
             language: VoiceLanguage,
-            format: "mp3" | "pcm",
+            format?: "mp3" | "pcm",
             voice?: VoiceSpeaker
         }
     ): Promise<Buffer | null>;
@@ -26,13 +27,16 @@ interface IVoiceService {
     ): Promise<string | null>;
 
     // 语音翻译
-    speechTranslateToSpeech(
+    speechTranslate(
         audioStream: AudioStream,
         params: {
             from: VoiceLanguage,
-            to: VoiceLanguage | VoiceLanguage[]
-        }
-    ): Promise<Buffer | null>;
+            to: VoiceLanguage[],
+            tts?: boolean,
+            ttsVoice?: VoiceSpeaker
+        },
+        callback?: (results: VoiceTranslateResult) => void
+    ): Promise<VoiceTranslateRes | null>;
 
     handleError(error: Error): void;
     logDebug(...params: any[]): void;

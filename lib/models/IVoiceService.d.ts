@@ -2,19 +2,22 @@
 import { VoiceLanguage } from "./VoiceLanguages";
 import { VoiceSpeaker } from "./VoiceSpeaker";
 import { AudioStream } from "./AudioStream";
+import { VoiceTranslateRes, VoiceTranslateResult } from "./VoiceTranslateResult";
 interface IVoiceService {
     textToSpeech(text: string, params: {
         language: VoiceLanguage;
-        format: "mp3" | "pcm";
+        format?: "mp3" | "pcm";
         voice?: VoiceSpeaker;
     }): Promise<Buffer | null>;
     speechRecognize(audioStream: AudioStream, params: {
         language: VoiceLanguage;
     }, callback?: (data: string | null) => void): Promise<string | null>;
-    speechTranslateToSpeech(audioStream: AudioStream, params: {
+    speechTranslate(audioStream: AudioStream, params: {
         from: VoiceLanguage;
-        to: VoiceLanguage | VoiceLanguage[];
-    }): Promise<Buffer | null>;
+        to: VoiceLanguage[];
+        tts?: boolean;
+        ttsVoice?: VoiceSpeaker;
+    }, callback?: (results: VoiceTranslateResult) => void): Promise<VoiceTranslateRes | null>;
     handleError(error: Error): void;
     logDebug(...params: any[]): void;
 }
