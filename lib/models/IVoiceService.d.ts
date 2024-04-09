@@ -1,18 +1,17 @@
 /// <reference types="node" />
-/// <reference types="node" />
-import { Readable } from "stream";
 import { VoiceLanguage } from "./VoiceLanguages";
 import { VoiceSpeaker } from "./VoiceSpeaker";
+import { AudioStream } from "./AudioStream";
 interface IVoiceService {
     textToSpeech(text: string, params: {
         language: VoiceLanguage;
         format: "mp3" | "pcm";
         voice?: VoiceSpeaker;
     }): Promise<Buffer | null>;
-    speechRecognize(audioStream: Readable, params: {
+    speechRecognize(audioStream: AudioStream, params: {
         language: VoiceLanguage;
     }, callback?: (data: string | null) => void): Promise<string | null>;
-    speechTranslateToSpeech(audioStream: Readable, params: {
+    speechTranslateToSpeech(audioStream: AudioStream, params: {
         from: VoiceLanguage;
         to: VoiceLanguage | VoiceLanguage[];
     }): Promise<Buffer | null>;

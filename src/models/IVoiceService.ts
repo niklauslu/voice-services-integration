@@ -3,6 +3,7 @@
 import { Readable } from "stream";
 import { VoiceLanguage } from "./VoiceLanguages";
 import { VoiceSpeaker } from "./VoiceSpeaker";
+import { AudioStream } from "./AudioStream";
 
 interface IVoiceService {
     // tts 文字转语音
@@ -17,7 +18,7 @@ interface IVoiceService {
 
     // asr 语音转文字
     speechRecognize(
-        audioStream: Readable,
+        audioStream: AudioStream,
         params: {
             language: VoiceLanguage
         },
@@ -26,7 +27,7 @@ interface IVoiceService {
 
     // 语音翻译
     speechTranslateToSpeech(
-        audioStream: Readable,
+        audioStream: AudioStream,
         params: {
             from: VoiceLanguage,
             to: VoiceLanguage | VoiceLanguage[]

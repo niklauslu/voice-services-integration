@@ -13,6 +13,7 @@ import { VoiceLanguage } from "../../models/VoiceLanguages";
 import { error } from "console";
 import { AzureSpeechLangData, azureSpeechLangs } from ".";
 import { AzureSpeechVoice } from "../../models/VoiceSpeaker";
+import { AudioStream } from "../../models/AudioStream";
 
 const debug = Debug('voice-services:azure');
 
@@ -92,7 +93,7 @@ class AzureService implements IVoiceService {
         return null
     }
 
-    async speechRecognize(audioStream: Readable, params: {
+    async speechRecognize(audioStream: AudioStream, params: {
         language: VoiceLanguage
     }, callback?: ((data: string | null) => void) | undefined): Promise<string | null> {
         const language = this.getLanguageConfig(params.language)
@@ -153,7 +154,7 @@ class AzureService implements IVoiceService {
     }
 
     async speechTranslateToSpeech(
-        audioStream: Readable,
+        audioStream: AudioStream,
         params: {
             from: VoiceLanguage,
             to: VoiceLanguage | VoiceLanguage[]

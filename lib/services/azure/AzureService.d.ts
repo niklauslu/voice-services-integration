@@ -1,9 +1,8 @@
 /// <reference types="node" />
-/// <reference types="node" />
-import { Readable } from 'stream';
 import IVoiceService from '../../models/IVoiceService';
 import { VoiceLanguage } from "../../models/VoiceLanguages";
 import { AzureSpeechVoice } from "../../models/VoiceSpeaker";
+import { AudioStream } from "../../models/AudioStream";
 declare class AzureService implements IVoiceService {
     private speechConfig;
     private apiVersion;
@@ -15,10 +14,10 @@ declare class AzureService implements IVoiceService {
         format: "mp3" | "pcm";
         voice?: AzureSpeechVoice;
     }): Promise<Buffer | null>;
-    speechRecognize(audioStream: Readable, params: {
+    speechRecognize(audioStream: AudioStream, params: {
         language: VoiceLanguage;
     }, callback?: ((data: string | null) => void) | undefined): Promise<string | null>;
-    speechTranslateToSpeech(audioStream: Readable, params: {
+    speechTranslateToSpeech(audioStream: AudioStream, params: {
         from: VoiceLanguage;
         to: VoiceLanguage | VoiceLanguage[];
     }): Promise<Buffer | null>;
