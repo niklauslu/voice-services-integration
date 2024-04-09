@@ -1,0 +1,27 @@
+{
+  "name": "voice-services-integration",
+  "version": "1.0.2",
+  "description": "语音服务聚合接口",
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
+  "keywords": ["voice", "speech recognition", "text-to-speech", "azure", "iflytek", "tencent", "baidu"],
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsc"
+  },
+  "author": "niklauslu",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/niklauslu/voice-services-integration.git"
+  },
+  "license": "ISC",
+  "devDependencies": {
+    "@types/debug": "^4.1.12",
+    "@types/node": "^20.12.5",
+    "typescript": "^5.4.4"
+  },
+  "dependencies": {
+    "debug": "^4.3.4",
+    "microsoft-cognitiveservices-speech-sdk": "^1.36.0"
+  }
+}
