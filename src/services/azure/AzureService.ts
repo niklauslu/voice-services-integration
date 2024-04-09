@@ -4,21 +4,14 @@
 // 定价 https://azure.microsoft.com/zh-cn/pricing/details/cognitive-services/speech-services/
 
 import * as sdk from "microsoft-cognitiveservices-speech-sdk";
-import Debug from 'debug';
-import { Readable } from 'stream';
 import IVoiceService from '../../models/IVoiceService';
 import Configuration from '../../config/Configuration';
-import { AzureConfig } from '../../models/AzureConfig';
 import { VoiceLanguage } from "../../models/VoiceLanguages";
-import { error } from "console";
 import { AzureSpeechLangData, azureSpeechLangs } from ".";
 import { AzureSpeechVoice } from "../../models/VoiceSpeaker";
 import { AudioStream } from "../../models/AudioStream";
 import { VoiceTranslateResult } from "../../models/VoiceTranslateResult";
 import { buffer, text } from "stream/consumers";
-
-const debug = Debug('voice-services:azure');
-
 
 
 class AzureService implements IVoiceService {
@@ -40,12 +33,12 @@ class AzureService implements IVoiceService {
 
     handleError(error: Error): void {
         // 实现错误处理逻辑
-        debug('[AzureService:Error]', error);
+        console.error('[AzureService:Error]', error);
         // 可以在这里记录错误，或者触发错误通知等
     }
 
     logDebug(...params: any[]) {
-        debug("[AzureService:Debug]", ...params);
+        console.debug("[AzureService:Debug]", ...params);
     };
 
     // 语音合成
@@ -83,18 +76,18 @@ class AzureService implements IVoiceService {
                     if (!audioData) {
                         this.handleError(new Error("textToSpeech no audiData"))
                         resolve(null)
+                        return
                     }
 
                     resolve(Buffer.from(audioData))
                 },
                 (error: string) => {
                     this.handleError(new Error(error));
-                    reject(error);
+                    // reject(error);
+                    resolve(null)
                 }
             );
         })
-
-        return null
     }
 
     async speechRecognize(audioStream: AudioStream, params: {

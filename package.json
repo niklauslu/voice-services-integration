@@ -1,6 +1,6 @@
 {
   "name": "voice-services-integration",
-  "version": "1.0.10",
+  "version": "1.0.13",
   "description": "语音AI服务聚合接口",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
