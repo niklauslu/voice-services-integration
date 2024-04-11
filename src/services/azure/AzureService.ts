@@ -11,7 +11,6 @@ import { AzureSpeechLangData, azureSpeechLangs } from ".";
 import { AzureSpeechVoice } from "../../models/VoiceSpeaker";
 import { AudioStream } from "../../models/AudioStream";
 import { VoiceTranslateResult } from "../../models/VoiceTranslateResult";
-import { buffer, text } from "stream/consumers";
 
 
 class AzureService implements IVoiceService {
@@ -232,7 +231,7 @@ class AzureService implements IVoiceService {
                                 voice: params.ttsVoice
                             })
     
-                            if (buffer !== null) {
+                            if (audio !== null) {
                                 const result: VoiceTranslateResult = {
                                     type: "audio",
                                     text: d.text,
