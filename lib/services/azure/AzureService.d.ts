@@ -3,7 +3,7 @@ import IVoiceService from '../../models/IVoiceService';
 import { VoiceLanguage } from "../../models/VoiceLanguages";
 import { AzureSpeechVoice } from "../../models/VoiceSpeaker";
 import { AudioStream } from "../../models/AudioStream";
-import { VoiceTranslateResult } from "../../models/VoiceTranslateResult";
+import { VoiceTranslateResponse } from "../../models/VoiceTranslateResult";
 declare class AzureService implements IVoiceService {
     private speechConfig;
     private translationConfig;
@@ -25,7 +25,7 @@ declare class AzureService implements IVoiceService {
         tts?: boolean;
         ttsFormat?: "mp3" | "pcm";
         ttsVoice?: AzureSpeechVoice;
-    }, callback?: (result: VoiceTranslateResult) => void): Promise<VoiceTranslateResult[] | null>;
+    }, callback?: (result: VoiceTranslateResponse) => void): Promise<VoiceTranslateResponse | null>;
     private getLanguageConfig;
 }
 export default AzureService;

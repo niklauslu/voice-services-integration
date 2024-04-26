@@ -10,7 +10,7 @@ import { VoiceLanguage } from "../../models/VoiceLanguages";
 import { AzureSpeechLangData, azureSpeechLangs } from ".";
 import { AzureSpeechVoice } from "../../models/VoiceSpeaker";
 import { AudioStream } from "../../models/AudioStream";
-import { VoiceTranslateResult } from "../../models/VoiceTranslateResult";
+import { VoiceTransalteResItem, VoiceTransalteResTTSData, VoiceTranslateResponse } from "../../models/VoiceTranslateResult";
 
 
 class AzureService implements IVoiceService {
@@ -158,8 +158,8 @@ class AzureService implements IVoiceService {
             ttsFormat?: "mp3" | "pcm",
             ttsVoice?: AzureSpeechVoice
         },
-        callback?: (result: VoiceTranslateResult) => void
-    ): Promise<VoiceTranslateResult[] | null> {
+        callback?: (result: VoiceTranslateResponse) => void
+    ): Promise<VoiceTranslateResponse | null> {
 
         const language = this.getLanguageConfig(params.from)
         if (language === undefined) {
@@ -196,48 +196,70 @@ class AzureService implements IVoiceService {
 
             translationRecognizer.recognizing = (s, e) => {
                 this.logDebug(`speechTranslate TRANSLATING: Text=${e.result.text}`);
+                
+                let fromResponse: VoiceTransalteResItem = {
+                    language: params.from,
+                    text: e.result.text
+                }
+                let toResponses: VoiceTransalteResItem[] = []
                 toLanguages.forEach(l => {
-                    const data: VoiceTranslateResult = {
+                    const item: VoiceTransalteResItem = {
                         language: l.lang,
-                        type: "text",
-                        text: e.result.text,
-                        result: e.result.translations.get(l.transaltion),
+                        text: e.result.translations.get(l.transaltion)
                     }
-                    if (callback) callback(data)
-
+                    toResponses.push(item)
                 })
+
+                let response:VoiceTranslateResponse = {
+                    from: fromResponse,
+                    translations: toResponses
+                }
+                if (callback) callback(response)
 
             }
 
             translationRecognizer.recognized = (s, e) => {
                 // console.log(`RECOGNIZED: Text=${e.result.text}, ${e.result.reason}`);
                 if (e.result.reason == sdk.ResultReason.TranslatedSpeech) {
-                    let datas: VoiceTranslateResult[] = []
+                    let fromResponse: VoiceTransalteResItem = {
+                        language: params.from,
+                        text: e.result.text
+                    }
+                    let toResponses: VoiceTransalteResItem[] = []
                     toLanguages.forEach(l => {
-                        datas.push({
+                        const item: VoiceTransalteResItem = {
                             language: l.lang,
-                            type: "text",
-                            text: e.result.text,
-                            result: e.result.translations.get(l.transaltion),
-                        })
+                            text: e.result.translations.get(l.transaltion)
+                        }
+                        toResponses.push(item)
                     })
+    
+                    let response:VoiceTranslateResponse = {
+                        from: fromResponse,
+                        translations: toResponses
+                    }
+                    if (callback) callback(response)
 
                     if (params.tts) {
-                        datas.forEach(async (d) => {
+                        response.TTSs = [] as VoiceTransalteResTTSData[]
+                        toResponses.forEach(async (to) => {
                            
-                            const audio = await this.textToSpeech(d.result as string, {
-                                language: d.language,
+                            const audio = await this.textToSpeech(to.text as string, {
+                                language: to.language,
                                 format: params.ttsFormat,
                                 voice: params.ttsVoice
                             })
     
                             if (audio !== null) {
-                                const result: VoiceTranslateResult = {
-                                    type: "audio",
-                                    text: d.text,
-                                    result: audio as Buffer,
-                                    language: d.language
+                                const ttsData = {
+                                    language: to.language,
+                                    data: audio
                                 }
+                                const result: VoiceTranslateResponse = {
+                                    from: fromResponse,
+                                    TTSs: [ttsData]
+                                }
+                                // response.TTSs?.push(ttsData);
                                 
                                 if (callback) {
                                     callback(result)
@@ -247,7 +269,7 @@ class AzureService implements IVoiceService {
                         })
                     }
 
-                    resolve(datas)
+                    resolve(response)
 
 
                 } else if (e.result.reason == sdk.ResultReason.NoMatch) {
